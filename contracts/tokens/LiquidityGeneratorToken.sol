@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: Unlicensed
 
-pragma solidity ^0.7.6;
+pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "../interfaces/IUniswapV2Factory.sol";
-import "../interfaces/IUniswapV2Router02.sol";
-import "../interfaces/IUniswapV2Pair.sol";
 
 
 contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
@@ -42,12 +39,10 @@ contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
     uint256 public _charityFee;
     uint256 private _previousCharityFee = _charityFee;
 
-    IUniswapV2Router02 public uniswapV2Router;
-    address public uniswapV2Pair;
     address public _charityAddress;
     
     bool inSwapAndLiquify;
-    bool public swapAndLiquifyEnabled = true;
+    bool public swapAndLiquifyEnabled = false;
     
     uint256 public _maxTxAmount;
     uint256 private numTokensSellToAddToLiquidity;
@@ -66,18 +61,17 @@ contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
         inSwapAndLiquify = false;
     }
     
-    function initialize (
+    constructor (
         address owner_,
         string memory name_, 
         string memory symbol_, 
         uint256 totalSupply_, 
-        address router_,
         address charityAddress_,
         uint16 taxFeeBps_, 
         uint16 liquidityFeeBps_,
         uint16 charityFeeBps_,
         uint16 maxTxBps_
-    ) external initializer {
+    ) {
         require(taxFeeBps_ >= 0 && taxFeeBps_ <= 10**4, "Invalid tax fee");
         require(liquidityFeeBps_ >= 0 && liquidityFeeBps_ <= 10**4, "Invalid liquidity fee");
         require(charityFeeBps_ >= 0 && charityFeeBps_ <= 10**4, "Invalid charity fee");
@@ -111,14 +105,6 @@ contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
         numTokensSellToAddToLiquidity = totalSupply_.mul(5).div(10**4); // 0.05%
         
         _rOwned[owner()] = _rTotal;
-        
-        IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(router_);
-         // Create a uniswap pair for this new token
-        uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
-            .createPair(address(this), _uniswapV2Router.WETH());
-
-        // set the rest of the contract variables
-        uniswapV2Router = _uniswapV2Router;
         
         // exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
@@ -218,7 +204,6 @@ contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
     }
 
     function excludeFromReward(address account) public onlyOwner() {
-        // require(account != 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 'We can not exclude Uniswap router.');
         require(!_isExcluded[account], "Account is already excluded");
         if(_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
@@ -288,7 +273,7 @@ contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
         emit SwapAndLiquifyEnabledUpdated(_enabled);
     }
     
-     //to recieve ETH from uniswapV2Router when swaping
+     //to recieve BNB from pancakeV2Router when swaping
     receive() external payable {}
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
@@ -421,15 +406,9 @@ contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
         }
         
         bool overMinTokenBalance = contractTokenBalance >= numTokensSellToAddToLiquidity;
-        if (
-            overMinTokenBalance &&
-            !inSwapAndLiquify &&
-            from != uniswapV2Pair &&
-            swapAndLiquifyEnabled
-        ) {
+        if ( overMinTokenBalance && !inSwapAndLiquify && swapAndLiquifyEnabled ) {
             contractTokenBalance = numTokensSellToAddToLiquidity;
             //add liquidity
-            swapAndLiquify(contractTokenBalance);
         }
         
         //indicates if fee should be deducted from transfer
@@ -444,61 +423,6 @@ contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
         _tokenTransfer(from,to,amount,takeFee);
     }
 
-    function swapAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
-        // split the contract balance into halves
-        uint256 half = contractTokenBalance.div(2);
-        uint256 otherHalf = contractTokenBalance.sub(half);
-
-        // capture the contract's current ETH balance.
-        // this is so that we can capture exactly the amount of ETH that the
-        // swap creates, and not make the liquidity event include any ETH that
-        // has been manually sent to the contract
-        uint256 initialBalance = address(this).balance;
-
-        // swap tokens for ETH
-        swapTokensForEth(half); // <- this breaks the ETH -> HATE swap when swap+liquify is triggered
-
-        // how much ETH did we just swap into?
-        uint256 newBalance = address(this).balance.sub(initialBalance);
-
-        // add liquidity to uniswap
-        addLiquidity(otherHalf, newBalance);
-        
-        emit SwapAndLiquify(half, newBalance, otherHalf);
-    }
-
-    function swapTokensForEth(uint256 tokenAmount) private {
-        // generate the uniswap pair path of token -> weth
-        address[] memory path = new address[](2);
-        path[0] = address(this);
-        path[1] = uniswapV2Router.WETH();
-
-        _approve(address(this), address(uniswapV2Router), tokenAmount);
-
-        // make the swap
-        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            tokenAmount,
-            0, // accept any amount of ETH
-            path,
-            address(this),
-            block.timestamp
-        );
-    }
-
-    function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
-        // approve token transfer to cover all possible scenarios
-        _approve(address(this), address(uniswapV2Router), tokenAmount);
-
-        // add the liquidity
-        uniswapV2Router.addLiquidityETH{value: ethAmount}(
-            address(this),
-            tokenAmount,
-            0, // slippage is unavoidable
-            0, // slippage is unavoidable
-            owner(),
-            block.timestamp
-        );
-    }
 
     //this method is responsible for taking all fee, if takeFee is true
     function _tokenTransfer(address sender, address recipient, uint256 amount,bool takeFee) private {
