@@ -40,6 +40,10 @@ contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
     uint256 private _previousCharityFee = _charityFee;
 
     address public _charityAddress;
+
+    address private _swapFactory;
+    address private _swapRouter;
+    address private _swapPair;
     
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = false;

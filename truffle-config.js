@@ -47,6 +47,7 @@ module.exports = {
       network_id: 97,
       confirmations: 10,
       timeoutBlocks: 200,
+      networkCheckTimeout: 999999,
       skipDryRun: true
     },
     bsc: {
@@ -66,13 +67,12 @@ module.exports = {
   // Configure your compilers
   compilers: {
     solc: {
-      version: "0.7.6",    // Fetch exact version from solc-bin (default: truffle's version)
+      version: "0.8.0",    // Fetch exact version from solc-bin (default: truffle's version)
       settings: {          // See the solidity docs for advice about optimization and evmVersion
        optimizer: {
          enabled: false,
          runs: 200
        },
-       evmVersion: "byzantium"
       }
     }
   },
