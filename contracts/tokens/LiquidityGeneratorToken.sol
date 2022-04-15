@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: Unlicensed
 
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.1;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "../interfaces/IUniswapV2Factory.sol";
 import "../interfaces/IUniswapV2Router02.sol";
 import "../interfaces/IUniswapV2Pair.sol";
 
 
-contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
+contract LiquidityGeneratorToken is IERC20, Ownable, Initializable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -87,7 +88,6 @@ contract LiquidityGeneratorToken is IERC20Upgradeable, OwnableUpgradeable {
         }
         require(taxFeeBps_ + liquidityFeeBps_ + charityFeeBps_ <= 10**4, "Total fee is over 100% of transfer amount");
 
-        OwnableUpgradeable.__Ownable_init();
         transferOwnership(owner_); 
 
         _name = name_;
