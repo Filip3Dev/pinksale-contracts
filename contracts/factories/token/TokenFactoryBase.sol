@@ -15,7 +15,8 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
   using Address for address payable;
 
   address public factoryManager;
-  address public implementation;
+  address public implementationERC20;
+  address public implementationERC1155;
   address public feeTo;
   uint256 public flatFee;
 
@@ -30,15 +31,20 @@ contract TokenFactoryBase is Ownable, ReentrancyGuard {
     _;
   }
 
-  constructor(address factoryManager_, address implementation_) {
+  constructor(address factoryManager_, address implementationERC20_, address implementationERC1155_) {
     factoryManager = factoryManager_;
-    implementation = implementation_;
+    implementationERC20 = implementationERC20_;
+    implementationERC1155 = implementationERC1155_;
     feeTo = msg.sender;
     flatFee = 10_000_000 gwei;
   }
 
-  function setImplementation(address implementation_) external onlyOwner {
-    implementation = implementation_;
+  function setImplementationERC20(address implementation_) external onlyOwner {
+    implementationERC20 = implementation_;
+  }
+
+  function setImplementationERC1155(address implementation_) external onlyOwner {
+    implementationERC1155 = implementation_;
   }
 
   function setFeeTo(address feeReceivingAddress) external onlyOwner {

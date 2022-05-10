@@ -40,8 +40,7 @@ contract TokenFactoryManager is Ownable, IFactoryManager {
     tokenFactories.remove(factory);
   }
 
-  function assignTokensToOwner(address owner, address token, uint8 tokenType) 
-    external override onlyAllowedFactory {
+  function assignTokensToOwner(address owner, address token, uint8 tokenType) external override onlyAllowedFactory {
     require(!hasToken[owner][token], "Token already exists");
     tokensOf[owner].push(Token(tokenType, token));
     hasToken[owner][token] = true;
