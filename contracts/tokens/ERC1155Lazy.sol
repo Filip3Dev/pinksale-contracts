@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.13;
+pragma solidity ^0.8.1;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -20,9 +21,11 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
 
     string private _name;
     string private _symbol;
-    uint256 public _MAX_SUPPLY;
-    uint256 public _TOTAL_SUPPLY;
+    string private _default_url;
+    uint256 public MAX_SUPPLY;
+    uint256 public TOTAL_SUPPLY;
     uint256 public NFT_PRICE = 1000000000000000;
+    bool public REVELETED = false;
 
     modifier tokenOwnerOnly(uint256 tokenId) {
         require(this.balanceOf(msg.sender, tokenId) != 0, "You don't have any token");
@@ -37,20 +40,26 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
         _grantRole(URI_SETTER_ROLE, owner_);
         _grantRole(PAUSER_ROLE, owner_);
         _grantRole(MINTER_ROLE, owner_);
-        _MAX_SUPPLY = max_supply_;
+        MAX_SUPPLY = max_supply_;
     }
 
     function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
         _setURI(newuri);
     }
-    
-    function maxSupply() external view returns (uint256) {
-        return _MAX_SUPPLY;
-    }
 
     function setMaxSupply(uint256 supply) external onlyRole(DEFAULT_ADMIN_ROLE) returns (bool){
         require(supply > 0, "Supply must be greater than 0");
-        _MAX_SUPPLY = supply;
+        MAX_SUPPLY = supply;
+        return true;
+    }
+
+    function setReveleted(bool status) external onlyRole(URI_SETTER_ROLE) returns (bool){
+        REVELETED = status;
+        return REVELETED;
+    }
+
+    function setDefaultUrl(string memory url_) external onlyRole(URI_SETTER_ROLE) returns (bool){
+        _default_url = url_;
         return true;
     }
 
@@ -78,23 +87,33 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
 
     function buyToken() public payable returns (bool) {
         require(msg.value >= NFT_PRICE, "Insufficient funds for purchase");
-        require(_MAX_SUPPLY > _TOTAL_SUPPLY + 1, "This value exceeds maximum supply!");
-        _mint(msg.sender, _TOTAL_SUPPLY, 1, "0x");
-        _TOTAL_SUPPLY = _TOTAL_SUPPLY.add(1);
+        require(MAX_SUPPLY > TOTAL_SUPPLY + 1, "This value exceeds maximum supply!");
+        _mint(msg.sender, TOTAL_SUPPLY, 1, "0x");
+        TOTAL_SUPPLY = TOTAL_SUPPLY.add(1);
         return true;
     }
 
     function mint(address account) public onlyRole(MINTER_ROLE){
-        require(_MAX_SUPPLY > _TOTAL_SUPPLY + 1, "This value exceeds maximum supply!");
-        _mint(account, _TOTAL_SUPPLY, 1, "0x");
-        _TOTAL_SUPPLY = _TOTAL_SUPPLY.add(1);
+        require(MAX_SUPPLY > TOTAL_SUPPLY + 1, "This value exceeds maximum supply!");
+        _mint(account, TOTAL_SUPPLY, 1, "0x");
+        TOTAL_SUPPLY = TOTAL_SUPPLY.add(1);
     }
 
     function mintBatch(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
-        require(_MAX_SUPPLY > _TOTAL_SUPPLY + amount, "This value exceeds maximum supply!");
+        require(MAX_SUPPLY > TOTAL_SUPPLY + amount, "This value exceeds maximum supply!");
         for(uint i = 0; i < amount; i++){
-            _mint(to, _TOTAL_SUPPLY, 1, "0x");
-            _TOTAL_SUPPLY = _TOTAL_SUPPLY.add(1);
+            _mint(to, TOTAL_SUPPLY, 1, "0x");
+            TOTAL_SUPPLY = TOTAL_SUPPLY.add(1);
+        }
+    }
+
+    function tokenUri(uint256 _tokenId) public view returns (string memory) {
+        if(REVELETED){
+            return string(
+                abi.encodePacked(uri(_tokenId), Strings.toString(_tokenId), ".json")
+            );
+        } else {
+            return string(_default_url);
         }
     }
 
