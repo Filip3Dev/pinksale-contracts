@@ -13,6 +13,8 @@ async function main() {
   const erc20 = await StandardERC20.deploy();
   const Standard1155 = await hre.ethers.getContractFactory("Standard1155");
   const erc1155 = await Standard1155.deploy();
+  const Standard721 = await hre.ethers.getContractFactory("Standard721");
+  const erc721 = await Standard721.deploy();
   const TokenFactoryManager = await hre.ethers.getContractFactory("TokenFactoryManager");
   const TFM = await TokenFactoryManager.deploy();
   
@@ -23,10 +25,11 @@ async function main() {
   
   console.log("StandardERC20 deployed to:", erc20.address);
   console.log("Standard1155 deployed to:", erc1155.address);
+  console.log("Standard721 deployed to:", erc721.address);
   console.log("TokenFactoryManager deployed to:", TFM.address);
 
   const StandardTokenFactory = await hre.ethers.getContractFactory("StandardTokenFactory");
-  const STF = await StandardTokenFactory.deploy(TFM.address, erc20.address, TFM.address);
+  const STF = await StandardTokenFactory.deploy(TFM.address, erc20.address, erc1155.address, erc721.address);
   await STF.deployed();
   console.log("StandardTokenFactory deployed to:", STF.address);
   

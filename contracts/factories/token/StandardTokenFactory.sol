@@ -7,11 +7,12 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./TokenFactoryBase.sol";
 import "../../interfaces/IStandardERC20.sol";
 import "../../interfaces/IStandard1155.sol";
+import "../../interfaces/IStandard721.sol";
 
 contract StandardTokenFactory is TokenFactoryBase {
   using Address for address payable;
   using SafeMath for uint256;
-  constructor(address factoryManager_, address implementationERC20_, address implementationERC1155_) TokenFactoryBase(factoryManager_, implementationERC20_, implementationERC1155_) {}
+  constructor(address factoryManager_, address implementationERC20_, address implementationERC1155_, address implementationERC721_) TokenFactoryBase(factoryManager_, implementationERC20_, implementationERC1155_, implementationERC721_) {}
 
   function createERC20(
     string memory name, 
@@ -27,11 +28,22 @@ contract StandardTokenFactory is TokenFactoryBase {
 
   function createERC1155(
     string memory name, 
-    string memory symbol
+    string memory symbol,
+    uint256 max_supply
   ) external nonReentrant onlyOwner returns (address token) {
     token = Clones.clone(implementationERC1155);
-    IStandard1155(token).initialize(msg.sender, name, symbol);
+    IStandard1155(token).initialize(msg.sender, name, symbol, max_supply);
     assignTokenToOwner(msg.sender, token, 1);
     emit TokenCreated(msg.sender, token, 1);
+  }
+
+  function createERC721(
+    string memory name, 
+    string memory symbol
+  ) external nonReentrant onlyOwner returns (address token) {
+    token = Clones.clone(implementationERC721);
+    IStandard721(token).initialize(msg.sender, name, symbol);
+    assignTokenToOwner(msg.sender, token, 2);
+    emit TokenCreated(msg.sender, token, 2);
   }
 }
