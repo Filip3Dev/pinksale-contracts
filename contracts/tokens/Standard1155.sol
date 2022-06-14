@@ -41,7 +41,6 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
         _grantRole(PAUSER_ROLE, owner_);
         _grantRole(MINTER_ROLE, owner_);
         MAX_SUPPLY = max_supply_;
-        mintUnique(owner_);
     }
 
     function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
