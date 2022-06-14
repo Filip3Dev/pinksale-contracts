@@ -67,18 +67,7 @@ contract LiquidityGeneratorToken is IERC20, Ownable, Initializable {
         inSwapAndLiquify = false;
     }
     
-    function initialize (
-        address owner_,
-        string memory name_, 
-        string memory symbol_, 
-        uint256 totalSupply_, 
-        address router_,
-        address charityAddress_,
-        uint16 taxFeeBps_, 
-        uint16 liquidityFeeBps_,
-        uint16 charityFeeBps_,
-        uint16 maxTxBps_
-    ) external initializer {
+    function initialize (address owner_, string memory name_,  string memory symbol_,  uint256 totalSupply_,  address router_, address charityAddress_, uint16 taxFeeBps_, uint16 liquidityFeeBps_, uint16 charityFeeBps_, uint16 maxTxBps_) external initializer {
         require(taxFeeBps_ >= 0 && taxFeeBps_ <= 10**4, "Invalid tax fee");
         require(liquidityFeeBps_ >= 0 && liquidityFeeBps_ <= 10**4, "Invalid liquidity fee");
         require(charityFeeBps_ >= 0 && charityFeeBps_ <= 10**4, "Invalid charity fee");

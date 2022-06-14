@@ -41,6 +41,7 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
         _grantRole(PAUSER_ROLE, owner_);
         _grantRole(MINTER_ROLE, owner_);
         MAX_SUPPLY = max_supply_;
+        mintUnique(owner_);
     }
 
     function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
@@ -120,7 +121,7 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
     function tokenUri(uint256 _tokenId) public view returns (string memory) {
         if(REVELETED){
             return string(
-                abi.encodePacked(uri(_tokenId), Strings.toString(_tokenId), ".json")
+                abi.encodePacked(uri(_tokenId), '/', Strings.toString(_tokenId), ".json")
             );
         } else {
             return string(_default_url);
