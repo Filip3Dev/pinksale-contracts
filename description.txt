@@ -1,0 +1,7 @@
+Deploy
+Initialize (owner, name, symbol)
+setDefaultUrl(URL)
+setURI(URL)
+setMaxSupply(number)
+setNftPrice(number)
+setRoyalties(owner)

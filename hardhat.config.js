@@ -9,7 +9,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 module.exports = {
-  defaultNetwork: "ganache",
+  defaultNetwork: "localhost",
   networks: {
     ganache: {
       url: "http://127.0.0.1:8545",
@@ -17,7 +17,7 @@ module.exports = {
       defaultBalanceEther: 10,
     },
     localhost: {
-      url: "http://127.0.0.1:7545",
+      url: "http://127.0.0.1:8545",
       accounts: [process.env.PRIV_KEY]
     },
     rinkeby: {

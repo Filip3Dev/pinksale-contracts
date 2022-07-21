@@ -25,7 +25,7 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
     uint256 public MAX_SUPPLY;
     uint256 public TOTAL_SUPPLY;
     uint256 public NFT_PRICE = 1000000000000000;
-    bool public REVELETED = false;
+    mapping (uint256 => bool) private REVELETED;
 
     modifier tokenOwnerOnly(uint256 tokenId) {
         require(this.balanceOf(msg.sender, tokenId) != 0, "You don't have any token");
@@ -51,11 +51,6 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
         require(supply > 0, "Supply must be greater than 0");
         MAX_SUPPLY = supply;
         return true;
-    }
-
-    function setReveleted(bool status) external onlyRole(URI_SETTER_ROLE) returns (bool){
-        REVELETED = status;
-        return REVELETED;
     }
 
     function setDefaultUrl(string memory url_) external onlyRole(URI_SETTER_ROLE) returns (bool){
@@ -89,6 +84,7 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
         require(msg.value >= NFT_PRICE, "Insufficient funds for purchase");
         require(MAX_SUPPLY > TOTAL_SUPPLY + 1, "This value exceeds maximum supply!");
         _mint(msg.sender, TOTAL_SUPPLY, 1, "0x");
+        REVELETED[TOTAL_SUPPLY] = true;
         TOTAL_SUPPLY = TOTAL_SUPPLY.add(1);
         return true;
     }
@@ -96,6 +92,7 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
     function mintUnique(address account) public onlyRole(MINTER_ROLE){
         require(MAX_SUPPLY > TOTAL_SUPPLY + 1, "This value exceeds maximum supply!");
         _mint(account, TOTAL_SUPPLY, 1, "0x");
+        REVELETED[TOTAL_SUPPLY] = true;
         TOTAL_SUPPLY = TOTAL_SUPPLY.add(1);
     }
 
@@ -107,6 +104,7 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
         require(MAX_SUPPLY > TOTAL_SUPPLY + amount, "This value exceeds maximum supply!");
         for(uint i = 0; i < amount; i++){
             _mint(to, TOTAL_SUPPLY, 1, "0x");
+            REVELETED[TOTAL_SUPPLY] = true;
             TOTAL_SUPPLY = TOTAL_SUPPLY.add(1);
         }
     }
@@ -117,8 +115,8 @@ contract Standard1155 is ERC1155, IERC2981, AccessControl, Pausable, ERC1155Supp
         }
     }
 
-    function tokenUri(uint256 _tokenId) public view returns (string memory) {
-        if(REVELETED){
+    function uri(uint256 _tokenId) public view override returns (string memory) {
+        if(REVELETED[_tokenId]){
             return string(
                 abi.encodePacked(uri(_tokenId), '/', Strings.toString(_tokenId), ".json")
             );
