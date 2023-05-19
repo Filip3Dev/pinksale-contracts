@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.1;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -22,7 +22,6 @@ contract StandardERC20 is IERC20, AccessControl, Pausable, Initializable {
     string private _name;
     string private _symbol;
     uint8 private _decimals;
-    bool public generated = true;
 
     function initialize(address owner_, string memory name_, string memory symbol_, uint8 decimals_, uint256 totalSupply_) external initializer {
         _name = name_;
@@ -143,7 +142,7 @@ contract StandardERC20 is IERC20, AccessControl, Pausable, Initializable {
         emit Approval(owner, spender, amount);
     }
 
-    function _setupDecimals(uint8 decimals_) internal whenNotPaused virtual {
+    function _setupDecimals(uint8 decimals_) internal whenNotPaused virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         _decimals = decimals_;
     }
     

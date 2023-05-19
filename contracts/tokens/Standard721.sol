@@ -33,6 +33,13 @@ contract Standard721 is ERC721, IERC2981, ERC721Enumerable, ERC721URIStorage, Pa
     function initialize(address owner_, string memory name_, string memory symbol_) external initializer {
         _name = name_;
         _symbol = symbol_;
+        _base_uri = "";
+        MAX_SUPPLY = 10;
+        NFT_PRICE = 1000000000000000;
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(MINTER_ROLE, msg.sender);
+
         _grantRole(DEFAULT_ADMIN_ROLE, owner_);
         _grantRole(PAUSER_ROLE, owner_);
         _grantRole(MINTER_ROLE, owner_);
@@ -102,12 +109,12 @@ contract Standard721 is ERC721, IERC2981, ERC721Enumerable, ERC721URIStorage, Pa
         return true;
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
         internal
         whenNotPaused
         override(ERC721, ERC721Enumerable)
     {
-        super._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 
     // The following functions are overrides required by Solidity.
