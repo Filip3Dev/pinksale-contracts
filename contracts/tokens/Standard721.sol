@@ -161,7 +161,7 @@ contract Standard721 is ERC721, IERC2981, ERC721Enumerable, ERC721URIStorage, Pa
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, IERC165, ERC721Enumerable, AccessControl)
+        override(ERC721, IERC165, ERC721Enumerable, ERC721URIStorage, AccessControl)
         returns (bool)
     {
         return (interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId));

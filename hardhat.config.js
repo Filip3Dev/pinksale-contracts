@@ -1,48 +1,37 @@
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-require("@nomiclabs/hardhat-waffle");
-require("@nomiclabs/hardhat-ethers");
-require("@nomiclabs/hardhat-etherscan");
-require("@nomiclabs/hardhat-ganache");
+require("@nomicfoundation/hardhat-toolbox");
+require("dotenv").config();
+require("hardhat-preprocessor");
 const dotenv = require("dotenv");
 dotenv.config();
 
+/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  defaultNetwork: "localhost",
+  solidity: "0.8.20",
+  defaultNetwork: "sepolia",
   networks: {
-    ganache: {
-      url: "http://127.0.0.1:8545",
-      gasLimit: 6000000000,
-      defaultBalanceEther: 10,
-    },
-    localhost: {
-      url: "http://127.0.0.1:8545",
-      accounts: [process.env.PRIV_KEY]
-    },
-    rinkeby: {
-      url: process.env.ALCHEMY_API_RINKEBY,
-      accounts: [process.env.PRIV_KEY]
-    },
     polygon: {
       url: process.env.ALCHEMY_API_POLYGON,
-      accounts: [process.env.PRIV_KEY]
+      accounts: [process.env.PRIV_KEY],
     },
-    mumbai: {
-      url: process.env.ALCHEMY_API_MUMBAI,
-      accounts: [process.env.PRIV_KEY]
-    }
+    sepolia: {
+      url: process.env.ALCHEMY_API_SEPOLIA,
+      chainId: 11155111,
+      accounts: [process.env.PRIV_KEY],
+    },
   },
   solidity: {
-    version: "0.8.4",
+    version: "0.8.20",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
-      }
-    }
+        runs: 200,
+      },
+    },
   },
   etherscan: {
-    apiKey: process.env.ETHER_SCAN_KEY
-  }
+    apiKey: process.env.ETHER_SCAN_KEY,
+  },
 };

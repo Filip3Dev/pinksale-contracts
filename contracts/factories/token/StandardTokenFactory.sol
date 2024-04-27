@@ -19,7 +19,7 @@ contract StandardTokenFactory is TokenFactoryBase {
     string memory symbol, 
     uint8 decimals, 
     uint256 totalSupply
-  ) external nonReentrant onlyOwner returns (address token) {
+  ) external nonReentrant onlyAuthorized returns (address token) {
     token = Clones.clone(implementationERC20);
     IStandardERC20(token).initialize(msg.sender, name, symbol, decimals, totalSupply);
     assignTokenToOwner(msg.sender, token, 0);
@@ -30,7 +30,7 @@ contract StandardTokenFactory is TokenFactoryBase {
     string memory name, 
     string memory symbol,
     uint256 max_supply
-  ) external nonReentrant onlyOwner returns (address token) {
+  ) external nonReentrant onlyAuthorized returns (address token) {
     token = Clones.clone(implementationERC1155);
     IStandard1155(token).initialize(msg.sender, name, symbol, max_supply);
     assignTokenToOwner(msg.sender, token, 1);
@@ -40,7 +40,7 @@ contract StandardTokenFactory is TokenFactoryBase {
   function createERC721(
     string memory name, 
     string memory symbol
-  ) external nonReentrant onlyOwner returns (address token) {
+  ) external nonReentrant onlyAuthorized returns (address token) {
     token = Clones.clone(implementationERC721);
     IStandard721(token).initialize(msg.sender, name, symbol);
     assignTokenToOwner(msg.sender, token, 2);

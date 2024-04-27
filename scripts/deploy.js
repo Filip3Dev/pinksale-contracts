@@ -1,11 +1,10 @@
 const hre = require("hardhat");
+const dotenv = require("dotenv");
+dotenv.config();
+
+const sleep = (ms) => new Promise((f) => setTimeout(f, ms));
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
   await hre.run('compile');
 
   // We get the contract to deploy
@@ -17,25 +16,47 @@ async function main() {
   const erc721 = await Standard721.deploy();
   const TokenFactoryManager = await hre.ethers.getContractFactory("TokenFactoryManager");
   const TFM = await TokenFactoryManager.deploy();
+
+  await erc20.waitForDeployment();
+  await sleep(20000);
+  await hre.run("verify:verify", { address: erc20.target });
+
+  await erc1155.waitForDeployment();
+  await sleep(20000);
+  await hre.run("verify:verify", { address: erc1155.target });
+
+  await erc721.waitForDeployment();
+  await sleep(20000);
+  await hre.run("verify:verify", { address: erc721.target });
   
-  await erc20.deployed();
-  await erc1155.deployed();
-  await TFM.deployed();
+  await TFM.waitForDeployment();
+  await sleep(20000);
+  await hre.run("verify:verify", { address: TFM.target });
 
   
-  console.log("StandardERC20 deployed to:", erc20.address);
-  console.log("Standard1155 deployed to:", erc1155.address);
-  console.log("Standard721 deployed to:", erc721.address);
-  console.log("TokenFactoryManager deployed to:", TFM.address);
+  console.log("\nStandardERC20 deployed to:", erc20.target);
+  console.log("\nStandard1155 deployed to:", erc1155.target);
+  console.log("\nStandard721 deployed to:", erc721.target);
+  console.log("\nTokenFactoryManager deployed to:", TFM.target);
 
   const StandardTokenFactory = await hre.ethers.getContractFactory("StandardTokenFactory");
-  const STF = await StandardTokenFactory.deploy(TFM.address, erc20.address, erc1155.address, erc721.address);
-  await STF.deployed();
-  console.log("StandardTokenFactory deployed to:", STF.address);
+  const STF = await StandardTokenFactory.deploy(TFM.target, erc20.target, erc1155.target, erc721.target);
+  await STF.waitForDeployment();
+  console.log("\nStandardTokenFactory deployed to:", STF.target);
+  await sleep(20000);
+  await hre.run("verify:verify", {
+    address: STF.target,
+    constructorArguments: [
+      TFM.target,
+      erc20.target,
+      erc1155.target,
+      erc721.target,
+    ],
+  });
   
-  let addTokenFactoryTX = await TFM.addTokenFactory(STF.address);
+  let addTokenFactoryTX = await TFM.addTokenFactory(STF.target);
   await addTokenFactoryTX.wait();
-  console.log(`Added StandardTokenFactory at ${STF.address} to TokenFactoryManager at ${TFM.address}`);
+  console.log(`Added StandardTokenFactory at ${STF.target} to TokenFactoryManager at ${TFM.target}\n`);
   TFM.getAllowedFactories().then(console.log);
 }
 
